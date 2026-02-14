@@ -98,6 +98,37 @@ implementation 'androidx.navigation:navigation-fragment-ktx:2.7.5'
 3. Sync project with Gradle files
 4. Build and run on device
 
+### Gradle Sync Instructions
+
+If you encounter Gradle sync issues, try these steps:
+
+1. **Force Gradle Sync**
+   - In Android Studio: File → Sync Project with Gradle Files
+   - Or click the "Sync Project with Gradle Files" button in the toolbar
+
+2. **Clean and Rebuild**
+   ```
+   ./gradlew clean
+   ./gradlew build
+   ```
+
+3. **Invalidate Caches (Android Studio)**
+   - File → Invalidate Caches → Invalidate and Restart
+
+4. **Common Issues**
+   - **"Cannot resolve external dependency"**: Ensure all repositories are defined in `settings.gradle` and `build.gradle`
+   - **"Plugin not found"**: Check `pluginManagement.repositories` in `settings.gradle`
+   - **Gradle version mismatch**: Verify Gradle version in `gradle/wrapper/gradle-wrapper.properties`
+
+5. **Repository Configuration**
+   - The project uses these repositories:
+     - `google()` - For Android and Google libraries
+     - `mavenCentral()` - For most third-party libraries
+     - `gradlePluginPortal()` - For Gradle plugins
+   - These are configured in:
+     - `settings.gradle` (pluginManagement and dependencyResolutionManagement)
+     - `build.gradle` (buildscript.repositories)
+
 ### Adding New Lessons
 1. Create lesson JSON file in `assets/lessons/`
 2. Add 3D model file in `assets/models/`
