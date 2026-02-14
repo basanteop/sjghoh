@@ -1,0 +1,71 @@
+{
+  "id": "physics_001",
+  "subject": "physics",
+  "title": "Newton's Laws of Motion",
+  "description": "Learn about the fundamental laws governing motion through interactive 3D models and guided lab steps.",
+  "difficulty": "beginner",
+  "estimatedDuration": 30,
+  "markerId": "marker_physics_001",
+  "modelPath": "models/newtons_laws.glb",
+  "labSteps": [
+    {
+      "stepNumber": 1,
+      "title": "First Law - Inertia",
+      "instruction": "Observe how an object at rest stays at rest unless acted upon by a force.",
+      "modelHighlighting": {
+        "objectId": "box",
+        "color": "#FF0000",
+        "highlightDuration": 3000
+      },
+      "requiresInteraction": true,
+      "interactionType": "TAP"
+    },
+    {
+      "stepNumber": 2,
+      "title": "Second Law - F=ma",
+      "instruction": "See how force equals mass times acceleration in this interactive demo.",
+      "modelHighlighting": {
+        "objectId": "force_arrow",
+        "color": "#00FF00",
+        "highlightDuration": 3000
+      },
+      "requiresInteraction": true,
+      "interactionType": "DRAG"
+    },
+    {
+      "stepNumber": 3,
+      "title": "Third Law - Action-Reaction",
+      "instruction": "For every action, there is an equal and opposite reaction.",
+      "modelHighlighting": {
+        "objectId": "rocket",
+        "color": "#0000FF",
+        "highlightDuration": 3000
+      },
+      "requiresInteraction": false
+    }
+  ],
+  "quiz": {
+    "id": "quiz_physics_001",
+    "title": "Newton's Laws Quiz",
+    "questions": [
+      {
+        "id": "q1",
+        "question": "What does Newton's First Law describe?",
+        "questionType": "multiple_choice",
+        "options": ["Gravity", "Inertia", "Momentum", "Energy"],
+        "correctAnswer": "Inertia",
+        "explanation": "The First Law states that objects at rest stay at rest and objects in motion stay in motion unless acted upon by an external force."
+      },
+      {
+        "id": "q2",
+        "question": "F = ma represents which of Newton's Laws?",
+        "questionType": "multiple_choice",
+        "options": ["First Law", "Second Law", "Third Law", "Fourth Law"],
+        "correctAnswer": "Second Law",
+        "explanation": "F = ma is the mathematical representation of Newton's Second Law of Motion."
+      }
+    ],
+    "passingScore": 70
+  },
+  "tags": ["mechanics", "fundamentals", "forces"]
+}
