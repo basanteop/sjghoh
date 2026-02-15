@@ -7,7 +7,7 @@
     <!-- AR Fragment -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/ar_fragment"
-        android:name="com.google.ar.sceneform.ux.ArFragment"
+        android:name="io.github.sceneview.ux.ArFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 

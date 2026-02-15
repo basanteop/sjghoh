@@ -52,8 +52,8 @@ dependencies {
     // ARCore
     implementation 'com.google.ar:core:1.41.0'
     
-    // Sceneform - 3D rendering for AR (maintained fork)
-    implementation 'com.gorylenko.sceneform:sceneform:1.21.0'
+    // SceneView - 3D rendering for AR (maintained Sceneform alternative)
+    implementation 'io.github.sceneview:sceneview:2.0.0'
     
     // Room Database
     implementation 'androidx.room:room-runtime:2.6.1'

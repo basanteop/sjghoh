@@ -9,9 +9,9 @@
 # Keep ARCore
 -keep class com.google.ar.** { *; }
 
-# Keep Sceneform
--keep class com.google.ar.sceneform.** { *; }
--keep class com.google.ar.sceneform.ux.** { *; }
+# Keep SceneView (Sceneform alternative)
+-keep class io.github.sceneview.** { *; }
+-keep class io.github.sceneview.ux.** { *; }
 
 # Keep Room entities
 -keep class com.ar.education.progress.** { *; }
