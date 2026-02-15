@@ -70,7 +70,7 @@ app/
 
 ### Core Libraries
 - **ARCore**: Google's AR platform
-- **Sceneform**: 3D rendering framework (maintained fork by gorylenko)
+- **SceneView**: 3D rendering framework (modern Sceneform alternative)
 - **Room**: Local database
 - **Navigation Component**: In-app navigation
 - **ViewModel & LiveData**: Architecture components
@@ -79,7 +79,7 @@ app/
 ### Key Dependencies
 ```gradle
 implementation 'com.google.ar:core:1.41.0'
-implementation 'com.gorylenko.sceneform:sceneform:1.21.0'
+implementation 'io.github.sceneview:sceneview:2.0.0'
 implementation 'androidx.room:room-runtime:2.6.1'
 implementation 'androidx.navigation:navigation-fragment-ktx:2.7.5'
 ```
@@ -98,7 +98,7 @@ implementation 'androidx.navigation:navigation-fragment-ktx:2.7.5'
 3. Sync project with Gradle files
 4. Build and run on device
 
-**Note on Sceneform**: This project uses the community-maintained Sceneform fork (`com.gorylenko.sceneform:sceneform:1.21.0`) instead of the deprecated Google version. This fork is actively maintained and compatible with modern Android Studio versions.
+**Note on SceneView**: This project uses SceneView (`io.github.sceneview:sceneview:2.0.0`) which is a modern, actively maintained fork of the deprecated Google Sceneform library. SceneView provides better compatibility with modern Android versions and is available on Maven Central.
 
 ### Gradle Sync Instructions
 

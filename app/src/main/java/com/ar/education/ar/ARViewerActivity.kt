@@ -13,11 +13,11 @@ import com.ar.education.databinding.ActivityArViewerBinding
 import com.ar.education.progress.ProgressRepository
 import com.ar.education.quiz.QuizActivity
 import com.google.ar.core.*
-import com.google.ar.sceneform.AnchorNode
-import com.google.ar.sceneform.math.Vector3
-import com.google.ar.sceneform.rendering.ModelRenderable
-import com.google.ar.sceneform.ux.ArFragment
-import com.google.ar.sceneform.ux.TransformableNode
+import io.github.sceneview.AnchorNode
+import io.github.sceneview.math.Vector3
+import io.github.sceneview.rendering.ModelRenderable
+import io.github.sceneview.ux.ArFragment
+import io.github.sceneview.ux.TransformableNode
 import kotlinx.coroutines.*
 
 /**
