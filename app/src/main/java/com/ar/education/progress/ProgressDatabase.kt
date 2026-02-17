@@ -1,6 +1,7 @@
 package com.ar.education.progress
 
 import androidx.room.*
+import com.ar.education.data.Converters
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -65,6 +66,7 @@ interface LessonProgressDao {
     version = 1,
     exportSchema = false
 )
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun lessonProgressDao(): LessonProgressDao
 }

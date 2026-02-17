@@ -1,89 +1,67 @@
 package com.ar.education.data
 
+import android.os.Parcelable
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 
-/**
- * Data class representing a lesson in the AR education app
- */
+@Parcelize
+@Entity(tableName = "lessons")
 data class Lesson(
-    val id: String,
-    val subject: Subject,
+    @PrimaryKey val id: String,
     val title: String,
+    val subject: String,
     val description: String,
-    val difficulty: Difficulty,
-    val estimatedDuration: Int, // in minutes
+    val difficulty: String,
+    val estimatedDuration: String,
     val markerId: String,
-    val modelPath: String,
+    val modelPath: String, // Path to the 3D model in assets
     val labSteps: List<LabStep>,
     val quiz: Quiz,
     val prerequisites: List<String> = emptyList(),
-    val tags: List<String> = emptyList()
-)
+    val tags: List<String> = emptyList(),
+    var bookmarked: Boolean = false,
+    var completed: Boolean = false
+) : Parcelable
 
-enum class Subject(val displayName: String) {
-    @SerializedName("physics")
-    PHYSICS("Physics"),
-    
-    @SerializedName("biology")
-    BIOLOGY("Biology"),
-    
-    @SerializedName("chemistry")
-    CHEMISTRY("Chemistry")
-}
-
-enum class Difficulty(val displayName: String, val level: Int) {
-    @SerializedName("beginner")
-    BEGINNER("Beginner", 1),
-    
-    @SerializedName("intermediate")
-    INTERMEDIATE("Intermediate", 2),
-    
-    @SerializedName("advanced")
-    ADVANCED("Advanced", 3)
-}
-
-/**
- * Data class representing a lab step with AR interaction
- */
+@Parcelize
 data class LabStep(
     val stepNumber: Int,
     val title: String,
     val instruction: String,
-    val modelHighlighting: ModelHighlighting? = null,
+    val modelHighlighting: ModelHighlighting? = null, // Optional model highlighting info
     val requiresInteraction: Boolean = false,
     val interactionType: InteractionType? = null,
     val expectedOutcome: String? = null,
     val imageUrl: String? = null,
     val audioUrl: String? = null
-)
+) : Parcelable
 
-/**
- * Data class for model highlighting during steps
- */
+@Parcelize
 data class ModelHighlighting(
     val objectId: String,
     val color: String, // hex color code
     val highlightDuration: Int = 3000 // milliseconds
-)
+) : Parcelable
 
-enum class InteractionType {
+@Parcelize
+enum class InteractionType : Parcelable {
     TAP, ROTATE, SCALE, DRAG, NONE
 }
 
-/**
- * Data class representing a quiz
- */
+@Parcelize
+@Entity(tableName = "quizzes")
 data class Quiz(
-    val id: String,
+    @PrimaryKey val id: String,
+    val lessonId: String,
     val title: String,
     val questions: List<QuizQuestion>,
     val passingScore: Int = 70,
     val timeLimit: Int = 0 // 0 means no time limit
-)
+) : Parcelable
 
-/**
- * Data class representing a quiz question
- */
+@Parcelize
 data class QuizQuestion(
     val id: String,
     val question: String,
@@ -92,39 +70,23 @@ data class QuizQuestion(
     val correctAnswer: String,
     val explanation: String? = null,
     val imageUrl: String? = null
-)
+) : Parcelable
 
-enum class QuestionType {
+@Parcelize
+enum class QuestionType : Parcelable {
     @SerializedName("multiple_choice")
     MULTIPLE_CHOICE,
-    
+
     @SerializedName("true_false")
     TRUE_FALSE
 }
 
-/**
- * Data class for user progress tracking
- */
-data class LessonProgress(
-    val lessonId: String,
+@Parcelize
+@Entity(tableName = "user_progress")
+data class UserProgress(
+    @PrimaryKey val lessonId: String,
     val userId: String,
     val completedSteps: List<Int> = emptyList(),
-    val quizScore: Int = 0,
-    val quizAttempts: Int = 0,
-    val isCompleted: Boolean = false,
-    val lastAccessed: Long = System.currentTimeMillis(),
-    val timeSpent: Long = 0, // in milliseconds
+    val quizScore: Int? = null,
     val bookmarked: Boolean = false
-)
-
-/**
- * Data class for app configuration
- */
-data class AppConfig(
-    val arCoreRequired: Boolean = true,
-    val offlineMode: Boolean = true,
-    val maxModelSize: Long = 10 * 1024 * 1024, // 10MB
-    val supportedSubjects: List<Subject> = listOf(Subject.PHYSICS, Subject.BIOLOGY, Subject.CHEMISTRY),
-    val enableAnalytics: Boolean = false,
-    val lowEndDeviceOptimization: Boolean = true
-)
+) : Parcelable

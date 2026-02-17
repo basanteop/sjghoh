@@ -101,7 +101,7 @@
                 </LinearLayout>
 
                 <TextView
-                    android:id="@+id/tv_description"
+                    android:id="@+id/tv_lesson_description"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
@@ -139,7 +139,7 @@
             android:layout_marginTop="24dp">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_start_lesson"
+                android:id="@+id/btn_view_in_ar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Start AR Lesson"
@@ -152,12 +152,28 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Take Quiz"
+                android.text="Take Quiz"
                 android:textSize="18sp"
                 android:padding="16dp"
                 style="@style/Widget.Material3.Button.OutlinedButton"/>
 
         </LinearLayout>
+
+        <!-- Lab Steps -->
+        <LinearLayout
+            android:id="@+id/ll_lab_steps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="24dp"/>
+
+        <!-- Quiz Questions -->
+        <LinearLayout
+            android:id="@+id/ll_quiz_questions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="24dp"/>
 
     </LinearLayout>
 

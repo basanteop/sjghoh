@@ -1,59 +1,39 @@
 package com.ar.education.ui
 
-import androidx.lifecycle.*
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.ar.education.data.Lesson
-import com.ar.education.data.LessonProgress
-import com.ar.education.progress.ProgressRepository
+import com.ar.education.data.LessonRepository
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel for LessonDetail Activity
- */
-class LessonDetailViewModel(
-    private val lessonId: String,
-    private val progressRepository: ProgressRepository
-) : ViewModel() {
-    
+class LessonDetailViewModel(application: Application, private val lessonId: String) : AndroidViewModel(application) {
+
+    private val lessonRepository = LessonRepository(application)
+
     private val _lesson = MutableLiveData<Lesson?>()
     val lesson: LiveData<Lesson?> = _lesson
-    
-    private val _progress = MutableLiveData<LessonProgress?>()
-    val progress: LiveData<LessonProgress?> = _progress
-    
+
     init {
         loadLesson()
-        loadProgress()
     }
-    
-    fun loadLesson() {
+
+    private fun loadLesson() {
         viewModelScope.launch {
-            val repository = LessonRepository(getApplication())
-            val result = repository.getLessonById(lessonId)
-            result.onSuccess { lessonData ->
-                _lesson.value = lessonData
-            }
-        }
-    }
-    
-    private fun loadProgress() {
-        viewModelScope.launch {
-            val progressData = progressRepository.getLessonProgress(lessonId)
-            _progress.value = progressData
+            _lesson.value = lessonRepository.getLesson(lessonId).getOrNull()
         }
     }
 }
 
-/**
- * Factory for LessonDetailViewModel
- */
-class LessonDetailViewModelFactory(
-    private val lessonId: String,
-    private val progressRepository: ProgressRepository
-) : ViewModelProvider.Factory {
+class LessonDetailViewModelFactory(private val application: Application, private val lessonId: String) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(LessonDetailViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return LessonDetailViewModel(lessonId, progressRepository) as T
+            return LessonDetailViewModel(application, lessonId) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

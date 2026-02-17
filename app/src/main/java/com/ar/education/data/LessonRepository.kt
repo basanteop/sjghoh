@@ -31,7 +31,7 @@ class LessonRepository(private val context: Context) {
     /**
      * Get lesson by ID
      */
-    suspend fun getLessonById(lessonId: String): Result<Lesson?> = withContext(Dispatchers.IO) {
+    suspend fun getLesson(lessonId: String): Result<Lesson?> = withContext(Dispatchers.IO) {
         try {
             if (lessonsCache.isEmpty()) {
                 loadLessonsFromAssets()

@@ -1,54 +1,48 @@
 package com.ar.education.ar
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.ar.education.R
 import com.ar.education.data.*
 import com.ar.education.databinding.ActivityArViewerBinding
 import com.ar.education.progress.ProgressRepository
-import com.ar.education.quiz.QuizActivity
-import com.google.ar.core.*
-import io.github.sceneview.AnchorNode
-import io.github.sceneview.math.Vector3
-import io.github.sceneview.rendering.ModelRenderable
-import io.github.sceneview.ux.ArFragment
-import io.github.sceneview.ux.TransformableNode
-import kotlinx.coroutines.*
+import com.ar.education.ui.QuizActivity
+import com.google.ar.core.Anchor
+import com.google.ar.core.HitResult
+import io.github.sceneview.ar.node.ArModelNode
+import io.github.sceneview.ar.node.PlacementMode
+import io.github.sceneview.ar.ArSceneView
+import kotlinx.coroutines.launch
 
-/**
- * AR Viewer Activity for displaying 3D models with guided lab steps
- */
 class ARViewerActivity : AppCompatActivity() {
-    
+
     private lateinit var binding: ActivityArViewerBinding
-    private lateinit var arFragment: ArFragment
+    private lateinit var arSceneView: ArSceneView
     private lateinit var viewModel: ARViewerViewModel
     private var currentLesson: Lesson? = null
     private var currentStepIndex = 0
-    private var modelRenderable: ModelRenderable? = null
-    private var anchorNode: AnchorNode? = null
-    private var transformableNode: TransformableNode? = null
-    
+    private var modelNode: ArModelNode? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         binding = ActivityArViewerBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
+        arSceneView = binding.arSceneView
+
         setupViews()
         setupViewModel()
         setupAR()
         loadLessonData()
     }
-    
+
     private fun setupViews() {
-        arFragment = supportFragmentManager.findFragmentById(R.id.ar_fragment) as ArFragment
-        
         binding.apply {
             btnPrevious.setOnClickListener { previousStep() }
             btnNext.setOnClickListener { nextStep() }
@@ -57,109 +51,101 @@ class ARViewerActivity : AppCompatActivity() {
             btnBookmark.setOnClickListener { toggleBookmark() }
         }
     }
-    
+
     private fun setupViewModel() {
         val lessonId = intent.getStringExtra(EXTRA_LESSON_ID) ?: return
-        val progressRepository = ProgressRepository(this)
-        viewModel = ViewModelProvider(this, ARViewerViewModelFactory(lessonId, progressRepository)) {
-            ARViewerViewModel(lessonId, progressRepository)
-        }.get(ARViewerViewModel::class.java)
-        
+        val progressRepository = ProgressRepository.getInstance(this)
+        val factory = ARViewerViewModelFactory(application, lessonId, progressRepository)
+        viewModel = ViewModelProvider(this, factory)[ARViewerViewModel::class.java]
+
         viewModel.currentLesson.observe(this) { lesson ->
             currentLesson = lesson
             updateUIForCurrentStep()
-            loadModel()
+            if (modelNode == null) {
+                loadModel()
+            }
         }
-        
+
         viewModel.currentStep.observe(this) { stepIndex ->
             currentStepIndex = stepIndex
             updateUIForCurrentStep()
         }
-        
+
         viewModel.progress.observe(this) { progress ->
             binding.btnBookmark.isSelected = progress?.bookmarked ?: false
         }
     }
-    
+
     private fun setupAR() {
-        arFragment.setOnTapArPlaneListener { hitResult, plane, motionEvent ->
-            if (anchorNode == null) {
-                // Create anchor
-                val anchor = hitResult.createAnchor()
-                anchorNode = AnchorNode(anchor)
-                anchorNode!!.setParent(arFragment.arSceneView.scene)
-                
-                // Load and place model
-                loadModel()
+        arSceneView.onArTap = { hitResult: HitResult? ->
+            if (modelNode == null) {
+                hitResult?.createAnchor()?.let { loadModel(it) }
             }
         }
     }
-    
+
     private fun loadLessonData() {
-        val lessonId = intent.getStringExtra(EXTRA_LESSON_ID) ?: return
-        viewModel.loadLesson()
+        val lessonId = intent.getStringExtra(EXTRA_LESSON_ID)
+        if (lessonId != null) {
+            viewModel.loadLesson()
+        }
     }
-    
-    private fun loadModel() {
+
+    private fun loadModel(anchor: Anchor? = null) {
         val lesson = currentLesson ?: return
-        
-        // Load 3D model from assets
-        ModelRenderable.builder()
-            .setSource(this, Uri.parse(lesson.modelPath))
-            .build()
-            .thenAccept { renderable ->
-                modelRenderable = renderable
-                if (anchorNode != null) {
-                    placeModel()
+
+        modelNode?.anchor = anchor
+
+        if (modelNode == null) {
+            lifecycleScope.launch {
+                try {
+                    val newModelNode = ArModelNode(arSceneView.engine, PlacementMode.INSTANT).apply {
+                        loadModelGlb(
+                            context = this@ARViewerActivity,
+                            glbFileLocation = lesson.modelPath
+                        )
+                        anchor?.let { this.anchor = it }
+                    }
+                    modelNode = newModelNode
+                    arSceneView.addChild(newModelNode)
+
+                    // Apply model highlighting if needed
+                    val currentStep = currentLesson?.labSteps?.get(currentStepIndex)
+                    currentStep?.modelHighlighting?.let {
+                        applyModelHighlighting(it)
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this@ARViewerActivity, "Failed to load model: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
-            .exceptionally { throwable ->
-                Toast.makeText(this, "Failed to load model: ${throwable.message}", Toast.LENGTH_SHORT).show()
-                null
-            }
-    }
-    
-    private fun placeModel() {
-        val renderable = modelRenderable ?: return
-        val node = TransformableNode(arFragment.transformationSystem)
-        node.renderable = renderable
-        node.setParent(anchorNode)
-        node.localPosition = Vector3(0f, 0f, 0f)
-        node.select()
-        transformableNode = node
-        
-        // Apply model highlighting if needed
-        val currentStep = currentLesson?.labSteps?.get(currentStepIndex)
-        currentStep?.modelHighlighting?.let { highlighting ->
-            applyModelHighlighting(highlighting)
         }
     }
-    
+
     private fun applyModelHighlighting(highlighting: ModelHighlighting) {
         // In a real implementation, this would highlight specific parts of the 3D model
         // For now, we'll just show a toast message
         val step = currentLesson?.labSteps?.get(currentStepIndex)
         Toast.makeText(this, step?.title ?: "", Toast.LENGTH_SHORT).show()
     }
-    
+
     private fun updateUIForCurrentStep() {
         val lesson = currentLesson ?: return
-        
+
         binding.apply {
             tvLessonTitle.text = lesson.title
             tvStepInfo.text = "Step ${currentStepIndex + 1} of ${lesson.labSteps.size}"
-            
+
             if (currentStepIndex < lesson.labSteps.size) {
                 val step = lesson.labSteps[currentStepIndex]
                 tvStepTitle.text = step.title
                 tvStepInstruction.text = step.instruction
                 tvExpectedOutcome.text = step.expectedOutcome ?: ""
             }
-            
+
             // Update button states
             btnPrevious.isEnabled = currentStepIndex > 0
             btnNext.isEnabled = currentStepIndex < lesson.labSteps.size - 1
-            
+
             // Show/hide take quiz button
             btnTakeQuiz.visibility = if (currentStepIndex == lesson.labSteps.size - 1) {
                 View.VISIBLE
@@ -168,22 +154,22 @@ class ARViewerActivity : AppCompatActivity() {
             }
         }
     }
-    
+
     private fun previousStep() {
         if (currentStepIndex > 0) {
             viewModel.previousStep()
         }
     }
-    
+
     private fun nextStep() {
         val lesson = currentLesson ?: return
         if (currentStepIndex < lesson.labSteps.size - 1) {
             // Mark current step as completed
-            viewModel.markStepCompleted(currentStepIndex + 1)
+            viewModel.markStepCompleted(currentStepIndex + 1, "user_id_placeholder")
             viewModel.nextStep()
         }
     }
-    
+
     private fun startQuiz() {
         val lesson = currentLesson ?: return
         val intent = Intent(this, QuizActivity::class.java)
@@ -191,27 +177,13 @@ class ARViewerActivity : AppCompatActivity() {
         intent.putExtra(QuizActivity.EXTRA_QUIZ_DATA, lesson.quiz)
         startActivity(intent)
     }
-    
+
     private fun toggleBookmark() {
-        viewModel.toggleBookmark()
+        viewModel.toggleBookmark("user_id_placeholder")
     }
-    
-    override fun onResume() {
-        super.onResume()
-        arFragment.onResume()
-    }
-    
-    override fun onPause() {
-        super.onPause()
-        arFragment.onPause()
-    }
-    
-    override fun onDestroy() {
-        super.onDestroy()
-        arFragment.onDestroy()
-    }
-    
+
     companion object {
         const val EXTRA_LESSON_ID = "extra_lesson_id"
+        const val EXTRA_QUIZ_DATA = "extra_quiz_data"
     }
 }

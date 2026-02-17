@@ -1,102 +1,51 @@
 package com.ar.education.progress
 
-import androidx.lifecycle.*
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.ar.education.data.Lesson
 import com.ar.education.data.LessonProgress
-import com.ar.education.ui.ProgressAdapter
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel for Progress Activity
- */
-class ProgressViewModel(private val progressRepository: ProgressRepository) : AndroidViewModel() {
-    
-    private val _progressList = MutableLiveData<List<ProgressAdapter.ProgressItem>>()
-    val progressList: LiveData<List<ProgressAdapter.ProgressItem>> = _progressList
-    
-    private val _completedCount = MutableLiveData(0)
-    val completedCount: LiveData<Int> = _completedCount
-    
-    private val _averageScore = MutableLiveData<Float?>()
-    val averageScore: LiveData<Float?> = _averageScore
-    
-    private val _bookmarkedCount = MutableLiveData(0)
-    val bookmarkedCount: LiveData<Int> = _bookmarkedCount
-    
-    init {
-        loadProgress()
-    }
-    
-    fun loadProgress() {
-        viewModelScope.launch {
-            try {
-                val userId = getCurrentUserId()
-                
-                // Load progress and convert to ProgressItem
-                val lessons = getAllLessons()
-                val userProgress = progressRepository.getAllProgress(userId)
-                
-                // Convert to UI items
-                val progressItems = mutableListOf<ProgressAdapter.ProgressItem>()
-                
-                lessons.forEach { lesson ->
-                    val progress = userProgress.find { it.lessonId == lesson.id }
-                    progress?.let {
-                        val progressItem = ProgressAdapter.ProgressItem(
-                            lessonId = lesson.id,
-                            lessonTitle = lesson.title,
-                            subject = lesson.subject,
-                            completedSteps = it.completedSteps.size,
-                            totalSteps = lesson.labSteps.size,
-                            quizScore = it.quizScore,
-                            isCompleted = it.isCompleted,
-                            lastAccessed = it.lastAccessed
-                        )
-                        progressItems.add(progressItem)
-                    }
-                }
-                
-                _progressList.value = progressItems.sortedByDescending { it.lastAccessed }
-                
-                // Calculate statistics
-                val completed = progressItems.count { it.isCompleted }
-                _completedCount.value = completed
-                
-                val avgScore = if (progressItems.any { it.quizScore > 0 }) {
-                    progressItems.filter { it.quizScore > 0 }.map { it.quizScore }.average().toFloat()
-                } else null
-                _averageScore.value = avgScore
-                
-                val bookmarked = userProgress.count { it.bookmarked }
-                _bookmarkedCount.value = bookmarked
-                
-            } catch (e: Exception) {
-                // Handle error
-            }
-        }
-    }
-    
-    private suspend fun getAllLessons(): List<Lesson> {
-        val repository = LessonRepository(getApplication())
-        return repository.getAllLessons().getOrThrow()
-    }
-    
-    private fun getCurrentUserId(): String {
-        // In a real app, this would get from authentication
-        return "default_user"
-    }
-}
+class ProgressViewModel(application: Application, private val progressRepository: ProgressRepository) : AndroidViewModel(application) {
 
-/**
- * Factory for ProgressViewModel
- */
-class ProgressViewModelFactory(private val progressRepository: ProgressRepository) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ProgressViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return ProgressViewModel(progressRepository) as T
+    private val _userProgress = MutableLiveData<Pair<List<String>, List<String>>>()
+    val userProgress: LiveData<Pair<List<String>, List<String>>> = _userProgress
+
+    fun loadUserProgress(userId: String) {
+        viewModelScope.launch {
+            val allProgress = progressRepository.getAllProgress(userId).first()
+            val bookmarkedLessons = allProgress.filter { it.bookmarked }.map { it.lessonId }
+            val completedLessons = allProgress.filter { it.isCompleted }.map { it.lessonId }
+
+            _userProgress.value = Pair(bookmarkedLessons, completedLessons)
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+
+    fun getProgressForLesson(lessonId: String): LiveData<LessonProgress?> {
+        val progressLiveData = MutableLiveData<LessonProgress?>()
+        viewModelScope.launch {
+            progressLiveData.value = progressRepository.getLessonProgress(lessonId)
+        }
+        return progressLiveData
+    }
+
+    fun getCompletionPercentage(lesson: Lesson): Float {
+        val progress = userProgress.value?.second?.find { it == lesson.id }
+        if (progress != null) {
+            return 100f
+        }
+        return 0f
+    }
+
+    fun getTotalCompletedLessons(): Int {
+        return userProgress.value?.second?.size ?: 0
+    }
+
+    fun getTotalBookmarkedLessons(): Int {
+        return userProgress.value?.first?.size ?: 0
     }
 }
