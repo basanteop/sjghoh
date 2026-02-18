@@ -1,23 +1,20 @@
 package com.ar.education.data
 
 import android.os.Parcelable
-import androidx.room.Entity
-import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-@Entity(tableName = "lessons")
 data class Lesson(
-    @PrimaryKey val id: String,
+    val id: String,
     val title: String,
     val subject: String,
     val description: String,
     val difficulty: String,
-    val estimatedDuration: String,
-    val markerId: String,
-    val modelPath: String, // Path to the 3D model in assets
-    val labSteps: List<LabStep>,
+    val estimatedDuration: Int,
+    val markerId: String = "",
+    val modelPath: String = "",
+    val labSteps: List<LabStep> = emptyList(),
     val quiz: Quiz,
     val prerequisites: List<String> = emptyList(),
     val tags: List<String> = emptyList(),
@@ -30,9 +27,9 @@ data class LabStep(
     val stepNumber: Int,
     val title: String,
     val instruction: String,
-    val modelHighlighting: ModelHighlighting? = null, // Optional model highlighting info
+    val modelHighlighting: ModelHighlighting? = null,
     val requiresInteraction: Boolean = false,
-    val interactionType: InteractionType? = null,
+    val interactionType: String? = null,
     val expectedOutcome: String? = null,
     val imageUrl: String? = null,
     val audioUrl: String? = null
@@ -41,52 +38,39 @@ data class LabStep(
 @Parcelize
 data class ModelHighlighting(
     val objectId: String,
-    val color: String, // hex color code
-    val highlightDuration: Int = 3000 // milliseconds
+    val color: String,
+    val highlightDuration: Int = 3000
 ) : Parcelable
 
 @Parcelize
-enum class InteractionType : Parcelable {
-    TAP, ROTATE, SCALE, DRAG, NONE
-}
-
-@Parcelize
-@Entity(tableName = "quizzes")
 data class Quiz(
-    @PrimaryKey val id: String,
-    val lessonId: String,
+    val id: String,
     val title: String,
-    val questions: List<QuizQuestion>,
+    val questions: List<QuizQuestion> = emptyList(),
     val passingScore: Int = 70,
-    val timeLimit: Int = 0 // 0 means no time limit
+    val timeLimit: Int = 0
 ) : Parcelable
 
 @Parcelize
 data class QuizQuestion(
     val id: String,
     val question: String,
-    val questionType: QuestionType,
-    val options: List<String>,
+    @SerializedName("questionType")
+    val questionType: String = "multiple_choice",
+    val options: List<String> = emptyList(),
     val correctAnswer: String,
     val explanation: String? = null,
     val imageUrl: String? = null
 ) : Parcelable
 
-@Parcelize
-enum class QuestionType : Parcelable {
-    @SerializedName("multiple_choice")
-    MULTIPLE_CHOICE,
-
-    @SerializedName("true_false")
-    TRUE_FALSE
-}
-
-@Parcelize
-@Entity(tableName = "user_progress")
-data class UserProgress(
-    @PrimaryKey val lessonId: String,
+data class LessonProgress(
+    val lessonId: String,
     val userId: String,
     val completedSteps: List<Int> = emptyList(),
-    val quizScore: Int? = null,
+    val quizScore: Int = 0,
+    val quizAttempts: Int = 0,
+    val isCompleted: Boolean = false,
+    val lastAccessed: Long = 0,
+    val timeSpent: Long = 0,
     val bookmarked: Boolean = false
-) : Parcelable
+)

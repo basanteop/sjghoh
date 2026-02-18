@@ -26,7 +26,7 @@ class LessonAdapter(private val onLessonClicked: (Lesson) -> Unit) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(lesson: Lesson) {
             binding.tvLessonTitle.text = lesson.title
-            binding.tvDescription.text = lesson.content
+            binding.tvDescription.text = lesson.description
         }
     }
 }

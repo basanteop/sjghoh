@@ -1,4 +1,4 @@
-package com.ar.education.quiz
+package com.ar.education.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -11,43 +11,45 @@ import com.ar.education.data.Quiz
 import com.ar.education.progress.ProgressRepository
 import kotlinx.coroutines.launch
 
-class QuizViewModel(application: Application, private val lessonId: String, private val quizData: Quiz) : AndroidViewModel(application) {
+class QuizViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val progressRepository = ProgressRepository(application)
+    private val progressRepository = ProgressRepository.getInstance(application)
 
-    private val _quiz = MutableLiveData<Quiz>()
-    val quiz: LiveData<Quiz> = _quiz
+    private val _quizResult = MutableLiveData<QuizResult>()
+    val quizResult: LiveData<QuizResult> = _quizResult
 
-    private val _score = MutableLiveData<Int>()
-    val score: LiveData<Int> = _score
+    private val userAnswers = mutableMapOf<Int, String>()
 
-    private val _isQuizFinished = MutableLiveData<Boolean>()
-    val isQuizFinished: LiveData<Boolean> = _isQuizFinished
-
-    init {
-        _quiz.value = quizData
+    fun submitAnswer(questionIndex: Int, selectedOption: String) {
+        userAnswers[questionIndex] = selectedOption
     }
 
-    fun submitQuiz(userAnswers: Map<Int, Int>) {
-        var correctAnswers = 0
-        for ((questionIndex, selectedOption) in userAnswers) {
-            if (quizData.questions[questionIndex].correctAnswerIndex == selectedOption) {
-                correctAnswers++
+    fun submitQuiz(quiz: Quiz, lessonId: String) {
+        val questions = quiz.questions
+        var correct = 0
+        for ((idx, answer) in userAnswers) {
+            if (idx < questions.size && questions[idx].correctAnswer == answer) {
+                correct++
             }
         }
-        _score.value = correctAnswers
+        val total = questions.size
+        val percentage = if (total > 0) (correct * 100) / total else 0
         viewModelScope.launch {
-            progressRepository.markQuizAsCompleted(lessonId, correctAnswers, quizData.questions.size)
-            _isQuizFinished.value = true
+            progressRepository.saveQuizResult(lessonId, percentage, "user_id_placeholder")
         }
+        _quizResult.value = QuizResult(correct, total, percentage, quiz.passingScore)
     }
 }
 
-class QuizViewModelFactory(private val application: Application, private val lessonId: String, private val quiz: Quiz) : ViewModelProvider.Factory {
+data class QuizResult(val correct: Int, val total: Int, val score: Int, val passingScore: Int) {
+    val passed get() = score >= passingScore
+}
+
+class QuizViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(QuizViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return QuizViewModel(application, lessonId, quiz) as T
+            return QuizViewModel(application) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

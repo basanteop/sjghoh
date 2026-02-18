@@ -5,38 +5,35 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.ar.education.data.Lesson
-import com.ar.education.databinding.ItemLessonBinding
+import com.ar.education.data.LessonProgress
+import com.ar.education.databinding.ItemProgressBinding
 
-class ProgressAdapter(private val onLessonClicked: (Lesson) -> Unit) :
-    ListAdapter<Lesson, ProgressAdapter.ProgressViewHolder>(LessonDiffCallback()) {
+class ProgressAdapter(private val onItemClicked: (LessonProgress) -> Unit) :
+    ListAdapter<LessonProgress, ProgressAdapter.ProgressViewHolder>(ProgressDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProgressViewHolder {
-        val binding = ItemLessonBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemProgressBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ProgressViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ProgressViewHolder, position: Int) {
-        val lesson = getItem(position)
-        holder.bind(lesson)
-        holder.itemView.setOnClickListener { onLessonClicked(lesson) }
+        val progress = getItem(position)
+        holder.bind(progress)
+        holder.itemView.setOnClickListener { onItemClicked(progress) }
     }
 
-    class ProgressViewHolder(private val binding: ItemLessonBinding) :
+    class ProgressViewHolder(private val binding: ItemProgressBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(lesson: Lesson) {
-            binding.tvLessonTitle.text = lesson.title
-            // You might want to show progress-specific data here
+        fun bind(progress: LessonProgress) {
+            binding.tvLessonTitle.text = progress.lessonId
+            binding.tvProgress.text = "${progress.completedSteps.size} steps"
+            binding.tvQuizScore.text = if (progress.quizScore > 0) "Quiz: ${progress.quizScore}%" else "Not taken"
+            binding.tvStatus.text = if (progress.isCompleted) "Completed" else "In Progress"
         }
     }
 }
 
-class LessonDiffCallback : DiffUtil.ItemCallback<Lesson>() {
-    override fun areItemsTheSame(oldItem: Lesson, newItem: Lesson): Boolean {
-        return oldItem.id == newItem.id
-    }
-
-    override fun areContentsTheSame(oldItem: Lesson, newItem: Lesson): Boolean {
-        return oldItem == newItem
-    }
+class ProgressDiffCallback : DiffUtil.ItemCallback<LessonProgress>() {
+    override fun areItemsTheSame(old: LessonProgress, new: LessonProgress) = old.lessonId == new.lessonId
+    override fun areContentsTheSame(old: LessonProgress, new: LessonProgress) = old == new
 }

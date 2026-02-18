@@ -40,6 +40,7 @@ class ARViewerActivity : AppCompatActivity() {
         setupViewModel()
         setupAR()
         loadLessonData()
+        checkArCoreAvailability()
     }
 
     private fun setupViews() {
@@ -91,6 +92,14 @@ class ARViewerActivity : AppCompatActivity() {
         }
     }
 
+    private fun checkArCoreAvailability() {
+        val lessonRepo = LessonRepository(this)
+        if (!lessonRepo.isARCoreSupported()) {
+            binding.arSceneView.visibility = View.GONE
+            binding.fallbackMessage.visibility = View.VISIBLE
+        }
+    }
+
     private fun loadModel(anchor: Anchor? = null) {
         val lesson = currentLesson ?: return
 
@@ -109,7 +118,6 @@ class ARViewerActivity : AppCompatActivity() {
                     modelNode = newModelNode
                     arSceneView.addChild(newModelNode)
 
-                    // Apply model highlighting if needed
                     val currentStep = currentLesson?.labSteps?.get(currentStepIndex)
                     currentStep?.modelHighlighting?.let {
                         applyModelHighlighting(it)
@@ -122,8 +130,6 @@ class ARViewerActivity : AppCompatActivity() {
     }
 
     private fun applyModelHighlighting(highlighting: ModelHighlighting) {
-        // In a real implementation, this would highlight specific parts of the 3D model
-        // For now, we'll just show a toast message
         val step = currentLesson?.labSteps?.get(currentStepIndex)
         Toast.makeText(this, step?.title ?: "", Toast.LENGTH_SHORT).show()
     }
@@ -142,11 +148,9 @@ class ARViewerActivity : AppCompatActivity() {
                 tvExpectedOutcome.text = step.expectedOutcome ?: ""
             }
 
-            // Update button states
             btnPrevious.isEnabled = currentStepIndex > 0
             btnNext.isEnabled = currentStepIndex < lesson.labSteps.size - 1
 
-            // Show/hide take quiz button
             btnTakeQuiz.visibility = if (currentStepIndex == lesson.labSteps.size - 1) {
                 View.VISIBLE
             } else {
@@ -164,7 +168,6 @@ class ARViewerActivity : AppCompatActivity() {
     private fun nextStep() {
         val lesson = currentLesson ?: return
         if (currentStepIndex < lesson.labSteps.size - 1) {
-            // Mark current step as completed
             viewModel.markStepCompleted(currentStepIndex + 1, "user_id_placeholder")
             viewModel.nextStep()
         }
