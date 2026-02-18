@@ -18,12 +18,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _lessons = MutableLiveData<List<Lesson>>()
     val lessons: LiveData<List<Lesson>> = _lessons
 
+    private val _filteredLessons = MutableLiveData<List<Lesson>>()
+    val filteredLessons: LiveData<List<Lesson>> = _filteredLessons
+
+    private val _selectedSubject = MutableLiveData<String>("all")
+    val selectedSubject: LiveData<String> = _selectedSubject
+
     fun loadLessons() {
         viewModelScope.launch {
             lessonRepository.getAllLessons().onSuccess { 
                 _lessons.value = it
+                filterBySubject(_selectedSubject.value ?: "all")
             }
         }
+    }
+
+    fun filterBySubject(subject: String) {
+        _selectedSubject.value = subject
+        val all = _lessons.value ?: return
+        _filteredLessons.value = if (subject == "all") all 
+                                 else all.filter { it.subject.equals(subject, ignoreCase = true) }
+    }
+
+    fun searchLessons(query: String) {
+        val all = _lessons.value ?: return
+        _filteredLessons.value = if (query.isEmpty()) all
+            else all.filter { it.title.contains(query, ignoreCase = true) || 
+                              it.description.contains(query, ignoreCase = true) }
     }
 }
 

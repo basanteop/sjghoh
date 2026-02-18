@@ -26,6 +26,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupRecyclerView()
+        setupFilterButtons()
         observeViewModel()
 
         viewModel.loadLessons()
@@ -39,8 +40,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupFilterButtons() {
+        binding.btnAllSubjects.setOnClickListener { viewModel.filterBySubject("all") }
+        binding.btnPhysics.setOnClickListener { viewModel.filterBySubject("physics") }
+        binding.btnBiology.setOnClickListener { viewModel.filterBySubject("biology") }
+        binding.btnChemistry.setOnClickListener { viewModel.filterBySubject("chemistry") }
+        binding.btnProgress.setOnClickListener { startActivity(Intent(this, ProgressActivity::class.java)) }
+    }
+
     private fun observeViewModel() {
-        viewModel.lessons.observe(this) { lessons ->
+        viewModel.filteredLessons.observe(this) { lessons ->
             lessonAdapter.submitList(lessons)
         }
     }

@@ -31,8 +31,8 @@ class ProgressActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        adapter = ProgressAdapter { lesson ->
-            // Handle lesson click
+        adapter = ProgressAdapter { progress ->
+            // Handle progress item click
         }
         binding.rvProgress.adapter = adapter
         binding.rvProgress.layoutManager = LinearLayoutManager(this)
@@ -41,6 +41,15 @@ class ProgressActivity : AppCompatActivity() {
     private fun observeViewModel() {
         viewModel.userProgress.observe(this) { progressList ->
             adapter.submitList(progressList)
+        }
+        viewModel.completedCount.observe(this) { 
+            binding.tvCompletedLessons.text = it.toString() 
+        }
+        viewModel.averageScore.observe(this) { 
+            binding.tvAverageScore.text = if (it > 0f) "${it.toInt()}%" else "N/A"
+        }
+        viewModel.bookmarkedCount.observe(this) { 
+            binding.tvBookmarked.text = it.toString() 
         }
     }
 }

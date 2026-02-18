@@ -1,27 +1,35 @@
 package com.ar.education.progress
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ar.education.data.Lesson
 import com.ar.education.data.LessonProgress
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class ProgressViewModel(application: Application, private val progressRepository: ProgressRepository) : AndroidViewModel(application) {
+class ProgressViewModel(private val progressRepository: ProgressRepository) : ViewModel() {
 
-    private val _userProgress = MutableLiveData<Pair<List<String>, List<String>>>()
-    val userProgress: LiveData<Pair<List<String>, List<String>>> = _userProgress
+    private val _userProgress = MutableLiveData<List<LessonProgress>>()
+    val userProgress: LiveData<List<LessonProgress>> = _userProgress
+
+    private val _completedCount = MutableLiveData<Int>(0)
+    val completedCount: LiveData<Int> = _completedCount
+
+    private val _averageScore = MutableLiveData<Float>(0f)
+    val averageScore: LiveData<Float> = _averageScore
+
+    private val _bookmarkedCount = MutableLiveData<Int>(0)
+    val bookmarkedCount: LiveData<Int> = _bookmarkedCount
 
     fun loadUserProgress(userId: String) {
         viewModelScope.launch {
-            val allProgress = progressRepository.getAllProgress(userId).first()
-            val bookmarkedLessons = allProgress.filter { it.bookmarked }.map { it.lessonId }
-            val completedLessons = allProgress.filter { it.isCompleted }.map { it.lessonId }
-
-            _userProgress.value = Pair(bookmarkedLessons, completedLessons)
+            progressRepository.getAllProgress(userId).collect { progressList ->
+                _userProgress.value = progressList
+                _completedCount.value = progressList.count { it.isCompleted }
+                _bookmarkedCount.value = progressList.count { it.bookmarked }
+                val scores = progressList.filter { it.quizScore > 0 }.map { it.quizScore }
+                _averageScore.value = if (scores.isNotEmpty()) scores.average().toFloat() else 0f
+            }
         }
     }
 
@@ -32,20 +40,14 @@ class ProgressViewModel(application: Application, private val progressRepository
         }
         return progressLiveData
     }
+}
 
-    fun getCompletionPercentage(lesson: Lesson): Float {
-        val progress = userProgress.value?.second?.find { it == lesson.id }
-        if (progress != null) {
-            return 100f
+class ProgressViewModelFactory(private val progressRepository: ProgressRepository) : androidx.lifecycle.ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ProgressViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ProgressViewModel(progressRepository) as T
         }
-        return 0f
-    }
-
-    fun getTotalCompletedLessons(): Int {
-        return userProgress.value?.second?.size ?: 0
-    }
-
-    fun getTotalBookmarkedLessons(): Int {
-        return userProgress.value?.first?.size ?: 0
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

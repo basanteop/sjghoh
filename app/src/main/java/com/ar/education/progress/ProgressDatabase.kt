@@ -1,5 +1,6 @@
 package com.ar.education.progress
 
+import android.content.Context
 import androidx.room.*
 import com.ar.education.data.Converters
 import kotlinx.coroutines.flow.Flow
@@ -69,4 +70,17 @@ interface LessonProgressDao {
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun lessonProgressDao(): LessonProgressDao
+
+    companion object {
+        @Volatile private var INSTANCE: AppDatabase? = null
+
+        fun getInstance(context: Context): AppDatabase =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "ar_education_db"
+                ).build().also { INSTANCE = it }
+            }
+    }
 }

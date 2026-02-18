@@ -42,7 +42,7 @@
             android:screenOrientation="portrait" />
             
         <activity
-            android:name=".ui.ARViewerActivity"
+            android:name=".ar.ARViewerActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AREducation.NoActionBar" />
@@ -60,7 +60,7 @@
         <!-- ARCore declaration -->
         <meta-data
             android:name="com.google.ar.core"
-            android:value="required"
+            android:value="optional"
             tools:replace="android:value" />
             
     </application>

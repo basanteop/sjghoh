@@ -42,7 +42,7 @@ class QuizActivity : AppCompatActivity() {
 
     private fun observeViewModel() {
         viewModel.quizResult.observe(this) { result ->
-            Toast.makeText(this, "Quiz submitted! Your score: ${result.score}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Quiz submitted! Your score: ${result.score}%", Toast.LENGTH_LONG).show()
             finish()
         }
     }
@@ -68,13 +68,14 @@ class QuizActivity : AppCompatActivity() {
             return
         }
 
-        viewModel.submitAnswer(quizData!!.questions[currentQuestionIndex], selectedOptionId)
+        val selectedText = binding.rgOptions.findViewById<RadioButton>(selectedOptionId)?.text?.toString() ?: return
+        viewModel.submitAnswer(currentQuestionIndex, selectedText)
 
         currentQuestionIndex++
         if (currentQuestionIndex < quizData!!.questions.size) {
             displayQuestion(currentQuestionIndex)
         } else {
-            quizData?.let { viewModel.submitQuiz(it.id, "user_id_placeholder") }
+            quizData?.let { viewModel.submitQuiz(it, intent.getStringExtra(EXTRA_LESSON_ID) ?: "") }
         }
     }
 
